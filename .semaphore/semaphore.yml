@@ -5,7 +5,7 @@ agent:
     type: a1-standard-4
     os_image: macos-xcode12
 blocks:
-  - name: Tests
+  - name: Run Tests
     task:
       jobs:
         - name: swift test
@@ -13,3 +13,24 @@ blocks:
             - checkout
             - swift build -v
             - swift test -v
+  - name: Build App
+    task:
+      env_vars:
+        - name: name
+          value: LANG
+        - name: value
+          value: en_US.UTF-8
+      prologue:
+        commands:
+          - chmod 0600 ~/.ssh/*
+          - ssh-add ~/.ssh/*
+          - checkout
+          - cache restore
+          - bundle install --path vendor/bundle
+          - cache store
+      jobs:
+        - name: Build
+          commands:
+            - bundle exec xcversion select 11.2.1
+            - bundle exec fastlane build
+            - artifact push job build/demoMapkit.ipa
